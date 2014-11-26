@@ -704,16 +704,18 @@ public class Parser {
 		} else if(currentToken.kind==Token.IF) {
 			acceptIt();
 			accept(Token.LEFTPAREN);
-			Expr E = parseExpr();
+			//Expr E = parseExpr();
 			accept(Token.RIGHTPAREN);
 			Stmt thenS = parseStmt();
 
 			if(currentToken.kind==Token.ELSE) {
 				acceptIt();
 				Stmt elseS = parseStmt();
-				S = new IfStmt(E, thenS, elseS, previousTokenPosition);
+				//S = new IfStmt(E, thenS, elseS, previousTokenPosition);
+				S = new IfStmt(parseExpr(), thenS, elseS, previousTokenPosition);
 			} else {
-				S = new IfStmt(E, thenS, previousTokenPosition);
+				//S = new IfStmt(E, thenS, previousTokenPosition);
+				S = new IfStmt(parseExpr(), thenS, previousTokenPosition);
 			}
 		} else if(currentToken.kind==Token.WHILE) {
 			acceptIt();
@@ -733,8 +735,9 @@ public class Parser {
 				accept(Token.ASSIGN);			
 				Expr rE = parseExpr();
 				E1 = new AssignExpr(lE, rE, previousTokenPosition);
+			} else {
+				E1 = new EmptyExpr(previousTokenPosition);
 			}
-			else E1 = new EmptyExpr(previousTokenPosition);
 			accept(Token.SEMICOLON);		
 			if(isExprSpecifier(currentToken.kind)) {
 				E2 = parseExpr();
