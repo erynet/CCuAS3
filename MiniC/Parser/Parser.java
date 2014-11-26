@@ -16,34 +16,34 @@ public class Parser {
     private SourcePos previousTokenPosition;
 
     public Parser(Scanner lexer, ErrorReporter reporter) {
-	scanner = lexer;
-        errorReporter = reporter;
+    	scanner = lexer;
+    	errorReporter = reporter;
     }
 
     // accept() checks whether the current token matches tokenExpected.
     // If so, it fetches the next token.
     // If not, it reports a syntax error.
     void accept (int tokenExpected) throws SyntaxError {
-	if (currentToken.kind == tokenExpected) {
-            previousTokenPosition = currentToken.GetSourcePos();
-	    currentToken = scanner.scan();
-	} else {
-	    syntaxError("\"%\" expected here", Token.spell(tokenExpected));
-	}
+		if (currentToken.kind == tokenExpected) {
+			previousTokenPosition = currentToken.GetSourcePos();
+			currentToken = scanner.scan();
+		} else {
+			syntaxError("\"%\" expected here", Token.spell(tokenExpected));
+		}
     }
 
     // acceptIt() unconditionally accepts the current token
     // and fetches the next token from the scanner.
     void acceptIt() {
-        previousTokenPosition = currentToken.GetSourcePos();
-	currentToken = scanner.scan();
+    	previousTokenPosition = currentToken.GetSourcePos();
+    	currentToken = scanner.scan();
     }
 
     // start records the position of the start of a phrase.
     // This is defined to be the position of the first
     // character of the first token of the phrase.
     void start(SourcePos position) {
-        position.StartCol = currentToken.GetSourcePos().StartCol;
+    	position.StartCol = currentToken.GetSourcePos().StartCol;
         position.StartLine = currentToken.GetSourcePos().StartLine;
     }
 
@@ -51,25 +51,60 @@ public class Parser {
     // This is defined to be the position of the last
     // character of the last token of the phrase.
     void finish(SourcePos position) {
-        position.EndCol = previousTokenPosition.EndCol;
-        position.EndLine = previousTokenPosition.EndLine;
+    	position.EndCol = previousTokenPosition.EndCol;
+    	position.EndLine = previousTokenPosition.EndLine;
     }
 
     void syntaxError(String messageTemplate, String tokenQuoted) throws SyntaxError {
-	SourcePos pos = currentToken.GetSourcePos();
-	errorReporter.reportError(messageTemplate, tokenQuoted, pos);
-	throw(new SyntaxError());
+    	SourcePos pos = currentToken.GetSourcePos();
+    	errorReporter.reportError(messageTemplate, tokenQuoted, pos);
+    	throw(new SyntaxError());
     }
 
     boolean isTypeSpecifier(int token) {
-	if(token == Token.VOID ||
-           token == Token.INT  ||
-           token == Token.BOOL ||
-           token == Token.FLOAT) {
-	    return true;
-	} else {
-	    return false;
-	}
+    	if(token == Token.VOID ||
+    		token == Token.INT  ||
+    		token == Token.BOOL ||
+    		token == Token.FLOAT) {
+    		return true;
+		} else {
+			return false;
+		}
+    }
+
+    boolean isExprSpecifier(int token) {
+		if(token==Token.PLUS ||	
+			token==Token.MINUS ||	
+			token==Token.NOT ||	
+			token==Token.ID ||	
+			token==Token.LEFTPAREN ||	
+			token==Token.INTLITERAL ||	
+			token==Token.BOOLLITERAL ||	
+			token==Token.FLOATLITERAL ||	
+			token==Token.STRINGLITERAL) {
+			return true;
+		} else	{
+			return false;
+		}
+    }
+
+    boolean isBinarySpecifier(int token) {
+		if(token==Token.PLUS ||	
+			token==Token.MINUS ||	
+			token==Token.TIMES ||
+			token==Token.DIV ||
+			token==Token.EQ||
+			token==Token.NOTEQ||
+			token==Token.LESSEQ||
+			token==Token.LESS||
+			token==Token.GREATEREQ||
+			token==Token.GREATER||
+			token==Token.AND||
+			token==Token.OR) {
+			return true;
+		} else {
+			return false;
+		}
     }
 
 
@@ -82,15 +117,15 @@ public class Parser {
     ///////////////////////////////////////////////////////////////////////////////
 
     public ArrayType parseArrayIndexDecl(Type T) throws SyntaxError {
-	IntLiteral L;
-	IntExpr IE;
-	accept(Token.LEFTBRACKET);
-        SourcePos pos = currentToken.GetSourcePos();
-	L = new IntLiteral(currentToken.GetLexeme(), pos);
-	accept(Token.INTLITERAL);
-	accept(Token.RIGHTBRACKET);
-	IE = new IntExpr (L, pos);
-	return new ArrayType (T, IE, previousTokenPosition);
+		IntLiteral L;
+		IntExpr IE;
+		accept(Token.LEFTBRACKET);
+		SourcePos pos = currentToken.GetSourcePos();
+		L = new IntLiteral(currentToken.GetLexeme(), pos);
+		accept(Token.INTLITERAL);
+		accept(Token.RIGHTBRACKET);
+		IE = new IntExpr (L, pos);
+		return new ArrayType (T, IE, previousTokenPosition);
     }
 
 
@@ -101,28 +136,26 @@ public class Parser {
     ///////////////////////////////////////////////////////////////////////////////
 
     public Program parse() {
-
-        Program ProgramAST = null;
-
+    	Program ProgramAST = null;
         previousTokenPosition = new SourcePos();
         previousTokenPosition.StartLine = 0;
         previousTokenPosition.StartCol = 0;
         previousTokenPosition.EndLine = 0;
         previousTokenPosition.EndCol = 0;
 
-	currentToken = scanner.scan(); // get first token from scanner...
+        currentToken = scanner.scan(); // get first token from scanner...
 
-	try {
-            ProgramAST = parseProgram();
-	    if (currentToken.kind != Token.EOF) {
-		syntaxError("\"%\" not expected after end of program",
-			       currentToken.GetLexeme());
-	    }
-	}
-	catch (SyntaxError s) { return null; }
-	return ProgramAST;
+        try {
+        	ProgramAST = parseProgram();
+        	if (currentToken.kind != Token.EOF) {
+        		syntaxError("\"%\" not expected after end of program",
+        				currentToken.GetLexeme());
+        	}
+        } catch (SyntaxError s) {
+        	return null;
+        }
+        return ProgramAST;
     }
-
     
     ///////////////////////////////////////////////////////////////////////////////
     //
@@ -134,34 +167,33 @@ public class Parser {
 
     // parseProgDecls: recursive helper function to facilitate AST construction.
     public Decl parseProgDecls () throws SyntaxError {
-        if (! isTypeSpecifier(currentToken.kind)) {
-           return new EmptyDecl (previousTokenPosition);
-        }
-        SourcePos pos = new SourcePos();
-        start(pos);
-        Type T = parseTypeSpec();
-	ID Ident = parseID();
-	if(currentToken.kind == Token.LEFTPAREN) {
-	   Decl newD = parseFunPart(T, Ident, pos);
-           return new DeclSequence (newD, parseProgDecls(), previousTokenPosition);
-	} else {
-           DeclSequence Vars = parseVarPart(T, Ident);
-           DeclSequence VarsTail = Vars.GetRightmostDeclSequenceNode();
-           Decl RemainderDecls = parseProgDecls();
-           VarsTail.SetRightSubtree (RemainderDecls);
-           return Vars;
-	}
+    	if (! isTypeSpecifier(currentToken.kind)) {
+    		return new EmptyDecl (previousTokenPosition);
+    	}
+    	SourcePos pos = new SourcePos();
+    	start(pos);
+    	Type T = parseTypeSpec();
+    	ID Ident = parseID();
+    	if(currentToken.kind == Token.LEFTPAREN) {
+    		Decl newD = parseFunPart(T, Ident, pos);
+    		return new DeclSequence (newD, parseProgDecls(), previousTokenPosition);
+    	} else {
+    		DeclSequence Vars = parseVarPart(T, Ident);
+    		DeclSequence VarsTail = Vars.GetRightmostDeclSequenceNode();
+    		Decl RemainderDecls = parseProgDecls();
+    		VarsTail.SetRightSubtree (RemainderDecls);
+    		return Vars;
+    	}
     }
 
     public Program parseProgram() throws SyntaxError {
-        SourcePos pos = new SourcePos();
-        start(pos);
-        Decl D = parseProgDecls();
-        finish(pos);
-        Program P = new Program (D, pos);
-        return P;
+    	SourcePos pos = new SourcePos();
+    	start(pos);
+    	Decl D = parseProgDecls();
+    	finish(pos);
+    	Program P = new Program (D, pos);
+    	return P;
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////
     //
@@ -172,27 +204,26 @@ public class Parser {
     ///////////////////////////////////////////////////////////////////////////////
 
     public Type parseTypeSpec() throws SyntaxError {
-        Type T = null;
-	switch(currentToken.kind) {
-	case Token.INT:
-            T = new IntType (currentToken.GetSourcePos());
-	    break;
-	case Token.BOOL:
-            T = new BoolType (currentToken.GetSourcePos());
-	    break;
-	case Token.FLOAT:
-            T = new FloatType (currentToken.GetSourcePos());
-	    break;
-	case Token.VOID:
-            T = new VoidType (currentToken.GetSourcePos());
-	    break;
-	default:
-	    assert(false); // unknown type :(
-	}
-	acceptIt();
-	return T;
+    	Type T = null;
+    	switch(currentToken.kind) {
+    	case Token.INT:
+    		T = new IntType (currentToken.GetSourcePos());
+    		break;
+    	case Token.BOOL:
+    		T = new BoolType (currentToken.GetSourcePos());
+    		break;
+    	case Token.FLOAT:
+    		T = new FloatType (currentToken.GetSourcePos());
+    		break;
+    	case Token.VOID:
+    		T = new VoidType (currentToken.GetSourcePos());
+    		break;
+    	default:
+    		assert(false); // unknown type :(
+    	}
+    	acceptIt();
+    	return T;
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////
     //
@@ -206,14 +237,13 @@ public class Parser {
 
         // We already know that the current token is "(".
         // Otherwise use accept() !
-        acceptIt();
-	Decl PDecl = parseParamsList(); // can also be empty...
-	accept(Token.RIGHTPAREN);
-	CompoundStmt CStmt = parseCompoundStmt();
-        finish(pos);
-	return new FunDecl (T, Ident, PDecl, CStmt, pos);
+    	acceptIt();
+    	Decl PDecl = parseParamsList(); // can also be empty...
+    	accept(Token.RIGHTPAREN);
+    	CompoundStmt CStmt = parseCompoundStmt();
+    	finish(pos);
+    	return new FunDecl (T, Ident, PDecl, CStmt, pos);
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////
     //
@@ -224,17 +254,16 @@ public class Parser {
     ///////////////////////////////////////////////////////////////////////////////
 
     public Decl parseParamsList() throws SyntaxError {
-        if (!isTypeSpecifier(currentToken.kind)) {
-           return new EmptyFormalParamDecl(previousTokenPosition);
-        }
-        Decl PDecl = parseParameterDecl();
-	if (currentToken.kind == Token.COMMA) {
-            acceptIt();
-        }
-        return new FormalParamDeclSequence (PDecl,
-                        parseParamsList(), previousTokenPosition);
-    } 
-
+    	if (!isTypeSpecifier(currentToken.kind)) {
+    		return new EmptyFormalParamDecl(previousTokenPosition);
+    	}
+    	Decl PDecl = parseParameterDecl();
+    	if (currentToken.kind == Token.COMMA) {
+    		acceptIt();
+    	}
+    	return new FormalParamDeclSequence (PDecl,
+    			parseParamsList(), previousTokenPosition);
+    }
 
     ///////////////////////////////////////////////////////////////////////////////
     //
@@ -245,21 +274,20 @@ public class Parser {
     ///////////////////////////////////////////////////////////////////////////////
 
     public Decl parseParameterDecl() throws SyntaxError {
-        Type T = null;
-        Decl D = null;
+    	Type T = null;
+    	Decl D = null;
 
-        SourcePos pos = new SourcePos();
-        start(pos);
-	if (isTypeSpecifier(currentToken.kind)) {
-	    T = parseTypeSpecifier();
-	} else {
-	    syntaxError("Type specifier instead of % expected",
-			Token.spell(currentToken.kind));
-	}
-	D = parseDeclarator(T, pos);
-	return D;
+    	SourcePos pos = new SourcePos();
+    	start(pos);
+    	if (isTypeSpecifier(currentToken.kind)) {
+    		T = parseTypeSpecifier();
+    	} else {
+    		syntaxError("Type specifier instead of % expected",
+    				Token.spell(currentToken.kind));
+    	}
+    	D = parseDeclarator(T, pos);
+    	return D;
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////
     //
@@ -270,14 +298,14 @@ public class Parser {
     ///////////////////////////////////////////////////////////////////////////////
 
     public Decl parseDeclarator(Type T, SourcePos pos) throws SyntaxError {
-	ID Ident = parseID();
-	if (currentToken.kind == Token.LEFTBRACKET) {
-	    ArrayType ArrT = parseArrayIndexDecl(T);
-            finish(pos);
-	    return new FormalParamDecl (ArrT, Ident, pos);
-	}
-        finish(pos);
-	return new FormalParamDecl (T, Ident, pos);
+    	ID Ident = parseID();
+    	if (currentToken.kind == Token.LEFTBRACKET) {
+    		ArrayType ArrT = parseArrayIndexDecl(T);
+    		finish(pos);
+    		return new FormalParamDecl (ArrT, Ident, pos);
+    	}
+    	finish(pos);
+    	return new FormalParamDecl (T, Ident, pos);
     }
 
 
@@ -289,37 +317,243 @@ public class Parser {
     //
     ///////////////////////////////////////////////////////////////////////////////
 
-    public DeclSequence parseVarPart(Type T, ID Ident) throws SyntaxError {
-	Type theType = T;
-        Decl D;
-        DeclSequence Seq = null;
-        Expr E = new EmptyExpr(previousTokenPosition);
-	if (currentToken.kind == Token.LEFTBRACKET) {
-	    theType = parseArrayIndexDecl(T);
-	}
-	if (currentToken.kind == Token.ASSIGN) {
-	    acceptIt();
-            // You can use the following code after you have implemented
-            // parseInitializer():
-	    // E = parseInitializer();
-	}
-        D = new VarDecl (theType, Ident, E, previousTokenPosition);
-        // You can use the following code after implementatin of parseInitDecl():
-        /*
-	if (currentToken.kind == Token.COMMA) {
-	    acceptIt();
-	    Seq = new DeclSequence (D, parseInitDecl(T), previousTokenPosition);
-	} else {
-            Seq = new DeclSequence (D, new EmptyDecl (previousTokenPosition),
+    public Decl parseInitDecl(Type T) throws SyntaxError {
+    	Decl D;
+    	ID Ident = parseID();
+    	ArrayType ArrT = null;
+    	Expr E = null;
+    	if(currentToken.kind==Token.LEFTBRACKET) {
+    		ArrT = parseArrayIndexDecl(T);
+    	}
+    	if(currentToken.kind==Token.ASSIGN) {
+    		acceptIt();
+    		E = parseInitializer();
+    	}
+    	if(ArrT!=null) {
+    		if(E!=null) {
+    			D = new VarDecl(ArrT, Ident, E, previousTokenPosition);
+    		} else {
+    			D = new VarDecl(ArrT, Ident, new EmptyExpr(previousTokenPosition), 
+    					previousTokenPosition);
+    		}
+    	} else {
+    		if(E!=null) {
+    			D = new VarDecl(T, Ident, E, previousTokenPosition);
+    		} else {
+    			D = new VarDecl(T, Ident, new EmptyExpr(previousTokenPosition), 
+    					previousTokenPosition);
+    		}
+    	}
+    	DeclSequence Seq = null;
+    	if (currentToken.kind == Token.COMMA) {
+    		acceptIt();
+    		Seq = new DeclSequence(D, parseInitDecl(T), previousTokenPosition);
+    	} else {
+    		Seq = new DeclSequence(D, new EmptyDecl (previousTokenPosition),
                                      previousTokenPosition);
-        }
-        */
-	accept (Token.SEMICOLON);
-	return Seq;
+    	}
+    	return Seq;
+    }
+    
+    public DeclSequence parseVarPart(Type T, ID Ident) throws SyntaxError {
+    	Type theType = T;
+    	Decl D;
+    	DeclSequence Seq = null;
+    	Expr E = new EmptyExpr(previousTokenPosition);
+    	if (currentToken.kind == Token.LEFTBRACKET) {
+    		theType = parseArrayIndexDecl(T);
+    	}
+    	if (currentToken.kind == Token.ASSIGN) {
+    		acceptIt();
+    		E = parseInitializer();
+    	}
+    	D = new VarDecl (theType, Ident, E, previousTokenPosition);
+
+    	if (currentToken.kind == Token.COMMA) {
+    		acceptIt();
+    		Seq = new DeclSequence (D, parseInitDecl(T), previousTokenPosition);
+    	} else {
+    		Seq = new DeclSequence (D, new EmptyDecl (previousTokenPosition),
+    				previousTokenPosition);
+    	}
+    	accept (Token.SEMICOLON);
+    	return Seq;
     }
 
 
+	///////////////////////////////////////////////////////////////////////////////
+	//
+	// parseInitializer():
+	//
+	// Initializer ::= Expr 
+    //				| "{" Expr ( "," Expr )* "}"
+	//
+	///////////////////////////////////////////////////////////////////////////////
+    
+    public Expr parseExprSequence() throws SyntaxError {
+    	Expr lE, rE;
+    	lE = parseExpr();
+    	if(currentToken.kind==Token.COMMA) {
+    		acceptIt();
+    		rE = parseExprSequence();
+    	} else {
+    		rE = new EmptyExpr(previousTokenPosition);
+    	}
+    	return new ExprSequence(lE, rE, previousTokenPosition);
+    }
+    
+    public Expr parseInitializer() throws SyntaxError {
+    	Expr E;
+    	if(currentToken.kind==Token.LEFTBRACE) {
+    		acceptIt();
+    		E=parseExprSequence();
+    		accept(Token.RIGHTBRACE);
+    	} else {
+    		E=parseExpr();
+    	}
+    	return E;
+    }
 
+    ///////////////////////////////////////////////////////////////////////////////
+    //
+    // parseExpr():
+    //
+    // Expr ::= OrExpr
+    //
+    ///////////////////////////////////////////////////////////////////////////////
+    
+    public Expr parseExpr() throws SyntaxError {
+    	Expr E = parseOrExpr();
+    	while(isBinarySpecifier(currentToken.kind) == true) {
+    		Operator opAST = new Operator (currentToken.GetLexeme(),
+    				previousTokenPosition);
+    		acceptIt();
+    		Expr newE = new BinaryExpr(E, opAST, parseOrExpr(), 
+    				previousTokenPosition);
+    		E = newE;
+    	}
+    	return E;
+    }
+    
+    ///////////////////////////////////////////////////////////////////////////////
+    //
+    // parseOrExpr():
+    //
+    // OrExpr ::= AndExpr
+    //		   | OrExpr "||" AndExpr
+    //		  ::= ( OrExpr "||" )? AndExpr
+    //
+    ///////////////////////////////////////////////////////////////////////////////
+
+    public Expr parseOrExpr() throws SyntaxError {
+    	Expr E;
+    	E = parseAndExpr();
+    	while(currentToken.kind==Token.OR) {
+    		Operator opAST = new Operator (currentToken.GetLexeme(),
+    				previousTokenPosition);
+    		acceptIt();
+    		Expr newE = new BinaryExpr(E, opAST, parseAndExpr(), 
+    				previousTokenPosition);
+    		E = newE;
+    	}
+    	return E;
+    }
+    
+    ///////////////////////////////////////////////////////////////////////////////
+    //
+    // parseAndExpr():
+    //
+    // AndExpr ::= RelationalExpr
+    //		 	| AndExpr "&&" RelationalExpr
+    //		   ::= ( AndExpr "&&" )? RelationalExpr
+    //
+    ///////////////////////////////////////////////////////////////////////////////
+
+    public Expr parseAndExpr() throws SyntaxError {
+    	Expr E;
+    	E = parseRelationalExpr();
+    	while(currentToken.kind==Token.AND) {
+    		Operator opAST = new Operator (currentToken.GetLexeme(),
+    				previousTokenPosition);
+    		acceptIt();
+    		Expr newE = new BinaryExpr(E, opAST, parseRelationalExpr(), 
+    				previousTokenPosition);
+    		E = newE;
+    	}
+    	return E;
+    }
+    
+    ///////////////////////////////////////////////////////////////////////////////
+    //
+    // parseRelationalExpr():
+    //
+    // RelationalExpr ::= AddExpr ( ("=="|"!="|"<"|"<="|">"|">=") AddExpr )?
+    //
+    ///////////////////////////////////////////////////////////////////////////////
+
+    public Expr parseRelationalExpr() throws SyntaxError {
+    	Expr E;
+    	E = parseAddExpr();
+    	while(currentToken.kind==Token.EQ ||
+    			currentToken.kind==Token.NOTEQ ||
+    			currentToken.kind==Token.LESSEQ ||
+    			currentToken.kind==Token.LESS ||
+    			currentToken.kind==Token.GREATEREQ ||
+    			currentToken.kind==Token.GREATER ) {
+    		Operator opAST = new Operator (currentToken.GetLexeme(),
+    				previousTokenPosition);
+    		acceptIt();
+    		Expr newE = new BinaryExpr(E, opAST, parseAddExpr(), 
+    				previousTokenPosition);
+    		E = newE;
+    	}
+    	return E;
+    }
+    
+    ///////////////////////////////////////////////////////////////////////////////
+    //
+    // parseAddExpr():
+    //
+    // AddExpr ::= MultExpr | AddExpr ("+"|"-") MultExpr
+    //
+    ///////////////////////////////////////////////////////////////////////////////
+
+    public Expr parseAddExpr() throws SyntaxError {
+    	Expr E = parseMulExpr();
+    	while(currentToken.kind == Token.PLUS || 
+    			currentToken.kind == Token.MINUS) {
+    		Operator opAST = new Operator (currentToken.GetLexeme(),
+    				previousTokenPosition);
+    		acceptIt();
+    		Expr newE = new BinaryExpr(E, opAST, parseMulExpr(), 
+    				previousTokenPosition);
+    		E = newE;
+    	}
+    	return E;
+    }
+    
+    ///////////////////////////////////////////////////////////////////////////////
+    //
+    // parseMulExpr():
+    //
+    // MulExpr ::= MultExpr | AddExpr ("+"|"-") MultExpr
+    //
+    ///////////////////////////////////////////////////////////////////////////////
+
+    public Expr parseMulExpr() throws SyntaxError {
+    	Expr E;
+    	E = parseUnaryExpr();
+    	while(currentToken.kind==Token.TIMES || 
+    			currentToken.kind==Token.DIV) {
+    		Operator opAST = new Operator (currentToken.GetLexeme(),
+    				previousTokenPosition);
+    		acceptIt();
+    		Expr newE = new BinaryExpr(E, opAST, parseUnaryExpr(), 
+    				previousTokenPosition);
+    		E = newE;
+    	}
+    	return E;
+    }
 
     ///////////////////////////////////////////////////////////////////////////////
     //
@@ -330,17 +564,17 @@ public class Parser {
     ///////////////////////////////////////////////////////////////////////////////
 
     public Expr parseUnaryExpr() throws SyntaxError {
-	while (currentToken.kind == Token.PLUS ||
+    	while (currentToken.kind == Token.PLUS ||
                currentToken.kind == Token.MINUS ||
                currentToken.kind == Token.NOT) {
-	    Operator opAST = new Operator (currentToken.GetLexeme(),
-					   previousTokenPosition);
-	    acceptIt();
-	    return new UnaryExpr (opAST, parseUnaryExpr(), previousTokenPosition);
-	}
-	return parsePrimaryExpr();
+    		Operator opAST = new Operator (currentToken.GetLexeme(),
+    				previousTokenPosition);
+    		acceptIt();
+    		return new UnaryExpr (opAST, parseUnaryExpr(), 
+    				previousTokenPosition);
+    	}
+    	return parsePrimaryExpr();
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////
     //
@@ -350,20 +584,55 @@ public class Parser {
     //              |  ID "[" expr "]"
     //              |  "(" expr ")"
     //              |  INTLITERAL | BOOLLITERAL | FLOATLITERAL | STRINGLITERAL
+    //			   ::= ID ( arglist? | "[" expr "]")
+    //				|  "(" expr ")"
+    //				| ( INTLITERAL | BOOLLITERAL | FLOATLITERAL | STRINGLITERAL )
     //
     ///////////////////////////////////////////////////////////////////////////////
 
     public Expr parsePrimaryExpr() throws SyntaxError {
-	Expr retExpr = null;
-
-        // your code goes here...
-
-
-
-
-	return retExpr;
+    	Expr retExpr = null;
+    	if(currentToken.kind == Token.ID) {
+    		ID Ident = parseID();
+    		Expr E = new VarExpr(Ident, previousTokenPosition);
+    		if(currentToken.kind == Token.LEFTBRACKET) {
+				acceptIt();
+				Expr indexE=parseExpr();
+				accept(Token.RIGHTBRACKET);
+				
+				retExpr = new ArrayExpr(E, indexE, previousTokenPosition);
+			} else if(currentToken.kind == Token.LEFTPAREN) {
+				Expr paramE=parseArgList();
+				retExpr=new CallExpr(Ident, paramE, previousTokenPosition);
+			} else {
+				retExpr = E;
+			}
+    	} else if(currentToken.kind == Token.LEFTPAREN) {
+    		acceptIt();
+    		Expr E = parseExpr();
+    		accept(Token.RIGHTPAREN);
+    		retExpr = E;
+    	} else if(currentToken.kind == Token.INTLITERAL) {
+    		retExpr = new IntExpr(new IntLiteral(currentToken.GetLexeme(), previousTokenPosition), 
+    				previousTokenPosition);
+    		acceptIt();
+		} else if(currentToken.kind == Token.BOOLLITERAL) {
+			retExpr = new BoolExpr(new BoolLiteral(currentToken.GetLexeme(), previousTokenPosition), 
+					previousTokenPosition);
+			acceptIt();
+		} else if(currentToken.kind == Token.FLOATLITERAL) {
+			retExpr = new FloatExpr(new FloatLiteral(currentToken.GetLexeme(), previousTokenPosition), 
+					previousTokenPosition);
+			acceptIt();
+		} else if(currentToken.kind == Token.STRINGLITERAL) {
+			retExpr = new StringExpr(new StringLiteral(currentToken.GetLexeme(), previousTokenPosition), 
+					previousTokenPosition);
+			accept(Token.STRINGLITERAL);
+		} else {
+			retExpr = new EmptyExpr(previousTokenPosition);
+		}
+    	return retExpr;
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////
     //
@@ -374,51 +643,150 @@ public class Parser {
     ///////////////////////////////////////////////////////////////////////////////
 
     public Decl parseCompoundDecls () throws SyntaxError {
-        if (!isTypeSpecifier(currentToken.kind)) {
-           return new EmptyDecl (previousTokenPosition);
+    	if (!isTypeSpecifier(currentToken.kind)) {
+        	return new EmptyDecl (previousTokenPosition);
         }
-        Type T = parseTypeSpec();
-	ID Ident = parseID();
-        DeclSequence Vars = parseVarPart(T, Ident);
-        DeclSequence VarsTail = Vars.GetRightmostDeclSequenceNode();
-        Decl RemainderDecls = parseCompoundDecls();
-        VarsTail.SetRightSubtree (RemainderDecls);
-        return Vars;       
+    	Type T = parseTypeSpec();
+    	ID Ident = parseID();
+    	DeclSequence Vars = parseVarPart(T, Ident);
+    	DeclSequence VarsTail = Vars.GetRightmostDeclSequenceNode();
+    	Decl RemainderDecls = parseCompoundDecls();
+    	VarsTail.SetRightSubtree (RemainderDecls);
+    	return Vars;       
     }
 
     public Stmt parseCompoundStmts () throws SyntaxError {
-	if (! (currentToken.kind == Token.LEFTBRACE ||
-               currentToken.kind == Token.IF ||
-               currentToken.kind == Token.WHILE ||
-               currentToken.kind == Token.FOR ||
-               currentToken.kind == Token.RETURN ||
-               currentToken.kind == Token.ID)
-	    ) {
-	    return new EmptyStmt(previousTokenPosition);
-	}
-        Stmt S = null;
-        // You can use the following code after implementation of parseStmt():
-        //S = parseStmt();
-        return new StmtSequence (S, parseCompoundStmts(), previousTokenPosition);
+    	if (!(currentToken.kind == Token.LEFTBRACE ||
+    			currentToken.kind == Token.IF ||
+    			currentToken.kind == Token.WHILE ||
+    			currentToken.kind == Token.FOR ||
+    			currentToken.kind == Token.RETURN ||
+    			currentToken.kind == Token.ID)) {
+    		return new EmptyStmt(previousTokenPosition);
+    	}
+    	Stmt S = null;
+    	S = parseStmt();
+    	return new StmtSequence (S, parseCompoundStmts(), 
+    			previousTokenPosition);
+    }
+
+    public Stmt parseStmt() throws SyntaxError {
+		Stmt S;
+		if(currentToken.kind==Token.LEFTBRACE) {
+			S=parseCompoundStmt();
+		} else if(currentToken.kind==Token.IF) {
+			acceptIt();
+			accept(Token.LEFTPAREN);
+			Expr E = parseExpr();
+			accept(Token.RIGHTPAREN);
+			Stmt thenS = parseStmt();
+
+			if(currentToken.kind==Token.ELSE) {
+				acceptIt();
+				Stmt elseS = parseStmt();
+				S = new IfStmt(E, thenS, elseS, previousTokenPosition);
+			} else {
+				S = new IfStmt(E, thenS, previousTokenPosition);
+			}
+		} else if(currentToken.kind==Token.WHILE) {
+			acceptIt();
+			accept(Token.LEFTPAREN);
+			Expr E = parseExpr();
+			accept(Token.RIGHTPAREN);
+			Stmt whileS = parseStmt();
+			S = new WhileStmt(E, whileS, previousTokenPosition);
+		} else if(currentToken.kind==Token.FOR) {
+			acceptIt();
+			accept(Token.LEFTPAREN);
+			Expr E1=null, E2=null, E3=null;
+
+			if(currentToken.kind==Token.ID) {
+				ID Ident = parseID();
+				Expr lE = new VarExpr(Ident, previousTokenPosition);
+				accept(Token.ASSIGN);			
+				Expr rE = parseExpr();
+				E1 = new AssignExpr(lE, rE, previousTokenPosition);
+			}
+			else E1 = new EmptyExpr(previousTokenPosition);
+			accept(Token.SEMICOLON);		
+			if(isExprSpecifier(currentToken.kind)) {
+				E2 = parseExpr();
+			} else {
+				E2 = new EmptyExpr(previousTokenPosition);
+			}
+			accept(Token.SEMICOLON);
+			if(currentToken.kind==Token.ID) {
+				ID Ident = parseID();
+				Expr lE = new VarExpr(Ident, previousTokenPosition);
+				accept(Token.ASSIGN);			
+				Expr rE = parseExpr();
+				E3 = new AssignExpr(lE, rE, previousTokenPosition);
+			} else {
+				E3 = new EmptyExpr(previousTokenPosition);
+			}
+			accept(Token.RIGHTPAREN);
+			Stmt forS = parseStmt();
+			
+			S = new ForStmt(E1, E2, E3, forS, previousTokenPosition);		
+		} else if(currentToken.kind==Token.RETURN) {
+			acceptIt();
+			Expr E;
+			if(isExprSpecifier(currentToken.kind)) {
+				E = parseExpr();
+			} else {
+				E = new EmptyExpr(previousTokenPosition);
+			}
+			accept(Token.SEMICOLON);
+			S = new ReturnStmt(E, previousTokenPosition);
+		} else if(currentToken.kind==Token.ID) {
+			ID Ident = parseID();
+			
+			if(currentToken.kind==Token.ASSIGN) {
+				Expr idE = new VarExpr(Ident, previousTokenPosition);	
+				accept(Token.ASSIGN);			
+				Expr rE = parseExpr();
+				accept(Token.SEMICOLON);
+				S = new AssignStmt(idE, rE, previousTokenPosition);
+				
+			} else if(currentToken.kind==Token.LEFTBRACKET) {
+				Expr idE = new VarExpr(Ident, previousTokenPosition);
+				acceptIt();
+				Expr indexE=parseExpr();
+				accept(Token.RIGHTBRACKET);
+
+				Expr arrayE=new ArrayExpr(idE, indexE, previousTokenPosition);
+
+				accept(Token.ASSIGN);
+				Expr rE = parseExpr();
+				accept(Token.SEMICOLON);
+				S = new AssignStmt(arrayE, rE, previousTokenPosition);
+			} else {
+				Expr E = parseArgList();
+				Expr callE = new CallExpr(Ident, E, previousTokenPosition);	
+				accept(Token.SEMICOLON);
+				S = new CallStmt(callE, previousTokenPosition);
+			}
+		} else {
+			S = new EmptyStmt(previousTokenPosition);
+		}
+	return S;
     }
 
     public CompoundStmt parseCompoundStmt() throws SyntaxError {
         SourcePos pos = new SourcePos();
         start(pos);
-	accept(Token.LEFTBRACE);
+        accept(Token.LEFTBRACE);
         Decl D = parseCompoundDecls();
         Stmt S = parseCompoundStmts();
-	accept(Token.RIGHTBRACE);
+        accept(Token.RIGHTBRACE);
         finish(pos);
         if ( (D.getClass() == EmptyDecl.class) &&
-             (S.getClass() == EmptyStmt.class)) {
-           return new EmptyCompoundStmt (previousTokenPosition);
+        		(S.getClass() == EmptyStmt.class)) {
+        	return new EmptyCompoundStmt (previousTokenPosition);
         } else {
-	   return new CompoundStmt (D, S, pos);
+        	return new CompoundStmt (D, S, pos);
         }
     }
-
-
 
     ///////////////////////////////////////////////////////////////////////////////
     //
@@ -429,27 +797,22 @@ public class Parser {
     ///////////////////////////////////////////////////////////////////////////////
 
     public Expr parseArgs() throws SyntaxError {
-	if (currentToken.kind == Token.RIGHTPAREN) {
-	    return new  EmptyActualParam (previousTokenPosition);
-        } 
-	Expr Params = null;
- /*
-  * You can use the following code after you have implemented parseExpr() aso.:
-  *
-  *
-        Params = new ActualParam (parseExpr(), previousTokenPosition);
-	if (currentToken.kind == Token.COMMA) {
-		acceptIt();
-        }
-*/
-	return new ActualParamSequence (Params, parseArgs(), previousTokenPosition);
+		if (currentToken.kind == Token.RIGHTPAREN) {
+		    return new  EmptyActualParam (previousTokenPosition);
+		}
+		Expr Params = null;
+		Params = new ActualParam (parseExpr(), previousTokenPosition);
+		if (currentToken.kind == Token.COMMA) {
+			acceptIt();
+		}
+		return new ActualParamSequence (Params, parseArgs(), previousTokenPosition);
     }
 
     public Expr parseArgList() throws SyntaxError {
-	accept(Token.LEFTPAREN);
-        Expr Params = parseArgs();
-	accept(Token.RIGHTPAREN);
-	return Params;
+    	accept(Token.LEFTPAREN);
+    	Expr Params = parseArgs();
+    	accept(Token.RIGHTPAREN);
+    	return Params;
     }
 
 
@@ -462,9 +825,9 @@ public class Parser {
     ///////////////////////////////////////////////////////////////////////////////
 
     public ID parseID() throws SyntaxError {
-	ID Ident = new ID(currentToken.GetLexeme(), currentToken.GetSourcePos());
-	accept(Token.ID);
-	return Ident;
+    	ID Ident = new ID(currentToken.GetLexeme(), currentToken.GetSourcePos());
+    	accept(Token.ID);
+    	return Ident;
     }
 
 
@@ -477,25 +840,24 @@ public class Parser {
     ///////////////////////////////////////////////////////////////////////////////
 
     public Type parseTypeSpecifier() throws SyntaxError {
-	Type T = null;
-	switch (currentToken.kind) {
-	case Token.INT:
-	    T = new IntType(currentToken.GetSourcePos());
-	    break;
-	case Token.FLOAT:
-	    T = new FloatType(currentToken.GetSourcePos());
-	    break;
-	case Token.BOOL:
-	    T = new BoolType(currentToken.GetSourcePos());
-	    break;
-	case Token.VOID:
-	    T = new VoidType(currentToken.GetSourcePos());
-	    break;
-	default:
-	    syntaxError("Type specifier expected", "");
-	}
-	acceptIt();
-	return T;
+		Type T = null;
+		switch (currentToken.kind) {
+		case Token.INT:
+		    T = new IntType(currentToken.GetSourcePos());
+		    break;
+		case Token.FLOAT:
+		    T = new FloatType(currentToken.GetSourcePos());
+		    break;
+		case Token.BOOL:
+		    T = new BoolType(currentToken.GetSourcePos());
+		    break;
+		case Token.VOID:
+		    T = new VoidType(currentToken.GetSourcePos());
+		    break;
+		default:
+		    syntaxError("Type specifier expected", "");
+		}
+		acceptIt();
+		return T;
     }
-
 }
