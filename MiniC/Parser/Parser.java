@@ -486,9 +486,11 @@ public class Parser {
     		Operator opAST = new Operator (currentToken.GetLexeme(),
     				previousTokenPosition);
     		acceptIt();
-    		Expr newE = new BinaryExpr(E, opAST, parseRelationalExpr(), 
+    		//Expr newE = new BinaryExpr(E, opAST, parseRelationalExpr(), 
+    		//		previousTokenPosition);
+    		return new BinaryExpr(E, opAST, parseRelationalExpr(), 
     				previousTokenPosition);
-    		E = newE;
+    		//E = newE;
     	}
     	return E;
     }
@@ -504,18 +506,21 @@ public class Parser {
     public Expr parseRelationalExpr() throws SyntaxError {
     	Expr E;
     	E = parseAddExpr();
-    	while(currentToken.kind==Token.EQ ||
-    			currentToken.kind==Token.NOTEQ ||
-    			currentToken.kind==Token.LESSEQ ||
-    			currentToken.kind==Token.LESS ||
-    			currentToken.kind==Token.GREATEREQ ||
-    			currentToken.kind==Token.GREATER ) {
+    	//while(currentToken.kind==Token.EQ ||
+    	if(currentToken.kind == Token.EQ ||
+    			currentToken.kind == Token.NOTEQ ||
+    			currentToken.kind == Token.LESSEQ ||
+    			currentToken.kind == Token.LESS ||
+    			currentToken.kind == Token.GREATEREQ ||
+    			currentToken.kind == Token.GREATER ) {
     		Operator opAST = new Operator (currentToken.GetLexeme(),
     				previousTokenPosition);
     		acceptIt();
-    		Expr newE = new BinaryExpr(E, opAST, parseAddExpr(), 
+    		//Expr newE = new BinaryExpr(E, opAST, parseAddExpr(), 
+    		//		previousTokenPosition);
+    		return new BinaryExpr(E, opAST, parseAddExpr(), 
     				previousTokenPosition);
-    		E = newE;
+    		//E = newE;
     	}
     	return E;
     }
@@ -530,14 +535,17 @@ public class Parser {
 
     public Expr parseAddExpr() throws SyntaxError {
     	Expr E = parseMulExpr();
-    	while(currentToken.kind == Token.PLUS || 
+    	//while(currentToken.kind == Token.PLUS || 
+    	if(currentToken.kind == Token.PLUS || 
     			currentToken.kind == Token.MINUS) {
     		Operator opAST = new Operator (currentToken.GetLexeme(),
     				previousTokenPosition);
     		acceptIt();
-    		Expr newE = new BinaryExpr(E, opAST, parseMulExpr(), 
+    		//Expr newE = new BinaryExpr(E, opAST, parseMulExpr(), 
+    		//		previousTokenPosition);
+    		return new BinaryExpr(E, opAST, parseMulExpr(), 
     				previousTokenPosition);
-    		E = newE;
+    		//E = newE;
     	}
     	return E;
     }
@@ -553,14 +561,17 @@ public class Parser {
     public Expr parseMulExpr() throws SyntaxError {
     	Expr E;
     	E = parseUnaryExpr();
-    	while(currentToken.kind==Token.TIMES || 
-    			currentToken.kind==Token.DIV) {
+    	//while(currentToken.kind==Token.TIMES || 
+    	if(currentToken.kind == Token.TIMES || 
+    			currentToken.kind == Token.DIV) {
     		Operator opAST = new Operator (currentToken.GetLexeme(),
     				previousTokenPosition);
     		acceptIt();
-    		Expr newE = new BinaryExpr(E, opAST, parseUnaryExpr(), 
+    		//Expr newE = new BinaryExpr(E, opAST, parseUnaryExpr(), 
+    		//		previousTokenPosition);
+    		return new BinaryExpr(E, opAST, parseUnaryExpr(), 
     				previousTokenPosition);
-    		E = newE;
+    		//E = newE;
     	}
     	return E;
     }
@@ -574,9 +585,10 @@ public class Parser {
     ///////////////////////////////////////////////////////////////////////////////
 
     public Expr parseUnaryExpr() throws SyntaxError {
-    	while (currentToken.kind == Token.PLUS ||
-               currentToken.kind == Token.MINUS ||
-               currentToken.kind == Token.NOT) {
+    	//while(currentToken.kind == Token.PLUS ||
+    	if(currentToken.kind == Token.PLUS ||
+    			currentToken.kind == Token.MINUS ||
+    			currentToken.kind == Token.NOT) {
     		Operator opAST = new Operator (currentToken.GetLexeme(),
     				previousTokenPosition);
     		acceptIt();
