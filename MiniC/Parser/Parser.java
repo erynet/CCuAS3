@@ -661,9 +661,7 @@ public class Parser {
     			currentToken.kind == Token.ID)) {
     		return new EmptyStmt(previousTokenPosition);
     	}
-    	Stmt S = null;
-    	S = parseStmt();
-    	return new StmtSequence (S, parseCompoundStmts(), 
+    	return new StmtSequence (parseStmt(), parseCompoundStmts(), 
     			previousTokenPosition);
     }
 
@@ -698,8 +696,6 @@ public class Parser {
 			Expr E1 = null, E2 = null, E3 = null;
 
 			if(currentToken.kind == Token.ID) {
-				//ID Ident = parseID();
-				//Expr lE = new VarExpr(Ident, previousTokenPosition);
 				Expr lE = new VarExpr(parseID(), previousTokenPosition);
 				accept(Token.ASSIGN);			
 				Expr rE = parseExpr();
@@ -715,8 +711,6 @@ public class Parser {
 			}
 			accept(Token.SEMICOLON);
 			if(currentToken.kind==Token.ID) {
-				//ID Ident = parseID();
-				//Expr lE = new VarExpr(Ident, previousTokenPosition);
 				Expr lE = new VarExpr(parseID(), previousTokenPosition);
 				accept(Token.ASSIGN);			
 				Expr rE = parseExpr();
