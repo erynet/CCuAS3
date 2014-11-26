@@ -728,15 +728,13 @@ public class Parser {
 			Expr E1=null, E2=null, E3=null;
 
 			if(currentToken.kind == Token.ID) {
-				//ID Ident = parseID();
-				//Expr lE = new VarExpr(Ident, previousTokenPosition);
-				Expr lE = new VarExpr(parseID(), previousTokenPosition);
+				ID Ident = parseID();
+				Expr lE = new VarExpr(Ident, previousTokenPosition);
 				accept(Token.ASSIGN);			
 				Expr rE = parseExpr();
 				E1 = new AssignExpr(lE, rE, previousTokenPosition);
-			} else { 
-				E1 = new EmptyExpr(previousTokenPosition); 
 			}
+			else E1 = new EmptyExpr(previousTokenPosition);
 			accept(Token.SEMICOLON);		
 			if(isExprSpecifier(currentToken.kind)) {
 				E2 = parseExpr();
@@ -745,9 +743,8 @@ public class Parser {
 			}
 			accept(Token.SEMICOLON);
 			if(currentToken.kind==Token.ID) {
-				//ID Ident = parseID();
-				//Expr lE = new VarExpr(Ident, previousTokenPosition);
-				Expr lE = new VarExpr(parseID(), previousTokenPosition);
+				ID Ident = parseID();
+				Expr lE = new VarExpr(Ident, previousTokenPosition);
 				accept(Token.ASSIGN);			
 				Expr rE = parseExpr();
 				E3 = new AssignExpr(lE, rE, previousTokenPosition);
@@ -771,37 +768,30 @@ public class Parser {
 		} else if(currentToken.kind==Token.ID) {
 			ID Ident = parseID();
 			
-			if(currentToken.kind == Token.ASSIGN) {
-				//Expr idE = new VarExpr(Ident, previousTokenPosition);	
+			if(currentToken.kind==Token.ASSIGN) {
+				Expr idE = new VarExpr(Ident, previousTokenPosition);	
 				accept(Token.ASSIGN);			
-				//Expr rE = parseExpr();
+				Expr rE = parseExpr();
 				accept(Token.SEMICOLON);
-				//S = new AssignStmt(idE, rE, previousTokenPosition);
-				//S = new AssignStmt(new VarExpr(Ident, previousTokenPosition), rE, previousTokenPosition);
-				S = new AssignStmt(new VarExpr(Ident, previousTokenPosition), parseExpr(), previousTokenPosition);
+				S = new AssignStmt(idE, rE, previousTokenPosition);
 				
-			} else if(currentToken.kind == Token.LEFTBRACKET) {
-				//Expr idE = new VarExpr(Ident, previousTokenPosition);
+			} else if(currentToken.kind==Token.LEFTBRACKET) {
+				Expr idE = new VarExpr(Ident, previousTokenPosition);
 				acceptIt();
-				//Expr indexE = parseExpr();
+				Expr indexE=parseExpr();
 				accept(Token.RIGHTBRACKET);
 
-				//Expr arrayE = new ArrayExpr(idE, indexE, previousTokenPosition);
-				//Expr arrayE = new ArrayExpr(new VarExpr(Ident, previousTokenPosition), indexE, previousTokenPosition);
-				Expr arrayE = new ArrayExpr(new VarExpr(Ident, previousTokenPosition), parseExpr(), previousTokenPosition);
+				Expr arrayE=new ArrayExpr(idE, indexE, previousTokenPosition);
 
 				accept(Token.ASSIGN);
-				//Expr rE = parseExpr();
+				Expr rE = parseExpr();
 				accept(Token.SEMICOLON);
-				//S = new AssignStmt(arrayE, rE, previousTokenPosition);
-				S = new AssignStmt(arrayE, parseExpr(), previousTokenPosition);
+				S = new AssignStmt(arrayE, rE, previousTokenPosition);
 			} else {
-				//Expr E = parseArgList();
-				//Expr callE = new CallExpr(Ident, E, previousTokenPosition);
-				//Expr callE = new CallExpr(Ident, parseArgList(), previousTokenPosition);
+				Expr E = parseArgList();
+				Expr callE = new CallExpr(Ident, E, previousTokenPosition);	
 				accept(Token.SEMICOLON);
-				//S = new CallStmt(callE, previousTokenPosition);
-				S = new CallStmt(new CallExpr(Ident, parseArgList(), previousTokenPosition), previousTokenPosition);
+				S = new CallStmt(callE, previousTokenPosition);
 			}
 		} else {
 			S = new EmptyStmt(previousTokenPosition);
