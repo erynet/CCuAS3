@@ -585,8 +585,8 @@ public class Parser {
     ///////////////////////////////////////////////////////////////////////////////
 
     public Expr parseUnaryExpr() throws SyntaxError {
-    	//while(currentToken.kind == Token.PLUS ||
-    	if(currentToken.kind == Token.PLUS ||
+    	while(currentToken.kind == Token.PLUS ||
+    	//if(currentToken.kind == Token.PLUS ||
     			currentToken.kind == Token.MINUS ||
     			currentToken.kind == Token.NOT) {
     		Operator opAST = new Operator (currentToken.GetLexeme(),
