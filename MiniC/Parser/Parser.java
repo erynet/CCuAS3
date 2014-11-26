@@ -613,7 +613,7 @@ public class Parser {
     ///////////////////////////////////////////////////////////////////////////////
 
     public Expr parsePrimaryExpr() throws SyntaxError {
-    	Expr retExpr = null;
+    	Expr returnExpr = null;
     	if(currentToken.kind == Token.ID) {
     		ID Ident = parseID();
     		Expr E = new VarExpr(Ident, previousTokenPosition);
@@ -622,38 +622,42 @@ public class Parser {
 				Expr indexE=parseExpr();
 				accept(Token.RIGHTBRACKET);
 				
-				retExpr = new ArrayExpr(E, indexE, previousTokenPosition);
+				returnExpr = new ArrayExpr(E, indexE, previousTokenPosition);
 			} else if(currentToken.kind == Token.LEFTPAREN) {
 				Expr paramE=parseArgList();
-				retExpr=new CallExpr(Ident, paramE, previousTokenPosition);
+				returnExpr = new CallExpr(Ident, paramE, previousTokenPosition);
 			} else {
-				retExpr = E;
+				returnExpr = E;
 			}
     	} else if(currentToken.kind == Token.LEFTPAREN) {
     		acceptIt();
     		Expr E = parseExpr();
     		accept(Token.RIGHTPAREN);
-    		retExpr = E;
+    		returnExpr = E;
     	} else if(currentToken.kind == Token.INTLITERAL) {
-    		retExpr = new IntExpr(new IntLiteral(currentToken.GetLexeme(), previousTokenPosition), 
+    		returnExpr = new IntExpr(new IntLiteral(currentToken.GetLexeme(), 
+    				previousTokenPosition), 
     				previousTokenPosition);
     		acceptIt();
 		} else if(currentToken.kind == Token.BOOLLITERAL) {
-			retExpr = new BoolExpr(new BoolLiteral(currentToken.GetLexeme(), previousTokenPosition), 
+			returnExpr = new BoolExpr(new BoolLiteral(currentToken.GetLexeme(), 
+					previousTokenPosition), 
 					previousTokenPosition);
 			acceptIt();
 		} else if(currentToken.kind == Token.FLOATLITERAL) {
-			retExpr = new FloatExpr(new FloatLiteral(currentToken.GetLexeme(), previousTokenPosition), 
+			returnExpr = new FloatExpr(new FloatLiteral(currentToken.GetLexeme(), 
+					previousTokenPosition), 
 					previousTokenPosition);
 			acceptIt();
 		} else if(currentToken.kind == Token.STRINGLITERAL) {
-			retExpr = new StringExpr(new StringLiteral(currentToken.GetLexeme(), previousTokenPosition), 
+			returnExpr = new StringExpr(new StringLiteral(currentToken.GetLexeme(), 
+					previousTokenPosition), 
 					previousTokenPosition);
 			accept(Token.STRINGLITERAL);
 		} else {
-			retExpr = new EmptyExpr(previousTokenPosition);
+			returnExpr = new EmptyExpr(previousTokenPosition);
 		}
-    	return retExpr;
+    	return returnExpr;
     }
 
     ///////////////////////////////////////////////////////////////////////////////
@@ -668,12 +672,13 @@ public class Parser {
     	if (!isTypeSpecifier(currentToken.kind)) {
         	return new EmptyDecl (previousTokenPosition);
         }
-    	Type T = parseTypeSpec();
-    	ID Ident = parseID();
-    	DeclSequence Vars = parseVarPart(T, Ident);
+    	//Type T = parseTypeSpec();
+    	//ID Ident = parseID();
+    	//DeclSequence Vars = parseVarPart(T, Ident);
+    	DeclSequence Vars = parseVarPart(parseTypeSpec(), parseID());
     	DeclSequence VarsTail = Vars.GetRightmostDeclSequenceNode();
     	Decl RemainderDecls = parseCompoundDecls();
-    	VarsTail.SetRightSubtree (RemainderDecls);
+    	VarsTail.SetRightSubtree(RemainderDecls);
     	return Vars;       
     }
 
@@ -722,14 +727,16 @@ public class Parser {
 			accept(Token.LEFTPAREN);
 			Expr E1=null, E2=null, E3=null;
 
-			if(currentToken.kind==Token.ID) {
-				ID Ident = parseID();
-				Expr lE = new VarExpr(Ident, previousTokenPosition);
+			if(currentToken.kind == Token.ID) {
+				//ID Ident = parseID();
+				//Expr lE = new VarExpr(Ident, previousTokenPosition);
+				Expr lE = new VarExpr(parseID(), previousTokenPosition);
 				accept(Token.ASSIGN);			
 				Expr rE = parseExpr();
 				E1 = new AssignExpr(lE, rE, previousTokenPosition);
+			} else { 
+				E1 = new EmptyExpr(previousTokenPosition); 
 			}
-			else E1 = new EmptyExpr(previousTokenPosition);
 			accept(Token.SEMICOLON);		
 			if(isExprSpecifier(currentToken.kind)) {
 				E2 = parseExpr();
@@ -738,8 +745,9 @@ public class Parser {
 			}
 			accept(Token.SEMICOLON);
 			if(currentToken.kind==Token.ID) {
-				ID Ident = parseID();
-				Expr lE = new VarExpr(Ident, previousTokenPosition);
+				//ID Ident = parseID();
+				//Expr lE = new VarExpr(Ident, previousTokenPosition);
+				Expr lE = new VarExpr(parseID(), previousTokenPosition);
 				accept(Token.ASSIGN);			
 				Expr rE = parseExpr();
 				E3 = new AssignExpr(lE, rE, previousTokenPosition);
@@ -763,30 +771,37 @@ public class Parser {
 		} else if(currentToken.kind==Token.ID) {
 			ID Ident = parseID();
 			
-			if(currentToken.kind==Token.ASSIGN) {
-				Expr idE = new VarExpr(Ident, previousTokenPosition);	
+			if(currentToken.kind == Token.ASSIGN) {
+				//Expr idE = new VarExpr(Ident, previousTokenPosition);	
 				accept(Token.ASSIGN);			
-				Expr rE = parseExpr();
+				//Expr rE = parseExpr();
 				accept(Token.SEMICOLON);
-				S = new AssignStmt(idE, rE, previousTokenPosition);
+				//S = new AssignStmt(idE, rE, previousTokenPosition);
+				//S = new AssignStmt(new VarExpr(Ident, previousTokenPosition), rE, previousTokenPosition);
+				S = new AssignStmt(new VarExpr(Ident, previousTokenPosition), parseExpr(), previousTokenPosition);
 				
-			} else if(currentToken.kind==Token.LEFTBRACKET) {
-				Expr idE = new VarExpr(Ident, previousTokenPosition);
+			} else if(currentToken.kind == Token.LEFTBRACKET) {
+				//Expr idE = new VarExpr(Ident, previousTokenPosition);
 				acceptIt();
-				Expr indexE=parseExpr();
+				//Expr indexE = parseExpr();
 				accept(Token.RIGHTBRACKET);
 
-				Expr arrayE=new ArrayExpr(idE, indexE, previousTokenPosition);
+				//Expr arrayE = new ArrayExpr(idE, indexE, previousTokenPosition);
+				//Expr arrayE = new ArrayExpr(new VarExpr(Ident, previousTokenPosition), indexE, previousTokenPosition);
+				Expr arrayE = new ArrayExpr(new VarExpr(Ident, previousTokenPosition), parseExpr(), previousTokenPosition);
 
 				accept(Token.ASSIGN);
-				Expr rE = parseExpr();
+				//Expr rE = parseExpr();
 				accept(Token.SEMICOLON);
-				S = new AssignStmt(arrayE, rE, previousTokenPosition);
+				//S = new AssignStmt(arrayE, rE, previousTokenPosition);
+				S = new AssignStmt(arrayE, parseExpr(), previousTokenPosition);
 			} else {
-				Expr E = parseArgList();
-				Expr callE = new CallExpr(Ident, E, previousTokenPosition);	
+				//Expr E = parseArgList();
+				//Expr callE = new CallExpr(Ident, E, previousTokenPosition);
+				//Expr callE = new CallExpr(Ident, parseArgList(), previousTokenPosition);
 				accept(Token.SEMICOLON);
-				S = new CallStmt(callE, previousTokenPosition);
+				//S = new CallStmt(callE, previousTokenPosition);
+				S = new CallStmt(new CallExpr(Ident, parseArgList(), previousTokenPosition), previousTokenPosition);
 			}
 		} else {
 			S = new EmptyStmt(previousTokenPosition);
