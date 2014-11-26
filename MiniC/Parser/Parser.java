@@ -669,9 +669,9 @@ public class Parser {
 
     public Stmt parseStmt() throws SyntaxError {
 		Stmt S;
-		if(currentToken.kind==Token.LEFTBRACE) {
-			S=parseCompoundStmt();
-		} else if(currentToken.kind==Token.IF) {
+		if(currentToken.kind == Token.LEFTBRACE) {
+			S = parseCompoundStmt();
+		} else if(currentToken.kind == Token.IF) {
 			acceptIt();
 			accept(Token.LEFTPAREN);
 			Expr E = parseExpr();
@@ -685,21 +685,22 @@ public class Parser {
 			} else {
 				S = new IfStmt(E, thenS, previousTokenPosition);
 			}
-		} else if(currentToken.kind==Token.WHILE) {
+		} else if(currentToken.kind == Token.WHILE) {
 			acceptIt();
 			accept(Token.LEFTPAREN);
 			Expr E = parseExpr();
 			accept(Token.RIGHTPAREN);
 			Stmt whileS = parseStmt();
 			S = new WhileStmt(E, whileS, previousTokenPosition);
-		} else if(currentToken.kind==Token.FOR) {
+		} else if(currentToken.kind == Token.FOR) {
 			acceptIt();
 			accept(Token.LEFTPAREN);
-			Expr E1=null, E2=null, E3=null;
+			Expr E1 = null, E2 = null, E3 = null;
 
 			if(currentToken.kind == Token.ID) {
-				ID Ident = parseID();
-				Expr lE = new VarExpr(Ident, previousTokenPosition);
+				//ID Ident = parseID();
+				//Expr lE = new VarExpr(Ident, previousTokenPosition);
+				Expr lE = new VarExpr(parseID(), previousTokenPosition);
 				accept(Token.ASSIGN);			
 				Expr rE = parseExpr();
 				E1 = new AssignExpr(lE, rE, previousTokenPosition);
@@ -714,8 +715,9 @@ public class Parser {
 			}
 			accept(Token.SEMICOLON);
 			if(currentToken.kind==Token.ID) {
-				ID Ident = parseID();
-				Expr lE = new VarExpr(Ident, previousTokenPosition);
+				//ID Ident = parseID();
+				//Expr lE = new VarExpr(Ident, previousTokenPosition);
+				Expr lE = new VarExpr(parseID(), previousTokenPosition);
 				accept(Token.ASSIGN);			
 				Expr rE = parseExpr();
 				E3 = new AssignExpr(lE, rE, previousTokenPosition);
@@ -726,7 +728,7 @@ public class Parser {
 			Stmt forS = parseStmt();
 			
 			S = new ForStmt(E1, E2, E3, forS, previousTokenPosition);		
-		} else if(currentToken.kind==Token.RETURN) {
+		} else if(currentToken.kind == Token.RETURN) {
 			acceptIt();
 			Expr E;
 			if(isExprSpecifier(currentToken.kind)) {
@@ -736,17 +738,17 @@ public class Parser {
 			}
 			accept(Token.SEMICOLON);
 			S = new ReturnStmt(E, previousTokenPosition);
-		} else if(currentToken.kind==Token.ID) {
+		} else if(currentToken.kind == Token.ID) {
 			ID Ident = parseID();
 			
-			if(currentToken.kind==Token.ASSIGN) {
+			if(currentToken.kind == Token.ASSIGN) {
 				Expr idE = new VarExpr(Ident, previousTokenPosition);	
 				accept(Token.ASSIGN);			
 				Expr rE = parseExpr();
 				accept(Token.SEMICOLON);
 				S = new AssignStmt(idE, rE, previousTokenPosition);
 				
-			} else if(currentToken.kind==Token.LEFTBRACKET) {
+			} else if(currentToken.kind == Token.LEFTBRACKET) {
 				Expr idE = new VarExpr(Ident, previousTokenPosition);
 				acceptIt();
 				Expr indexE=parseExpr();
