@@ -704,18 +704,16 @@ public class Parser {
 		} else if(currentToken.kind==Token.IF) {
 			acceptIt();
 			accept(Token.LEFTPAREN);
-			//Expr E = parseExpr();
+			Expr E = parseExpr();
 			accept(Token.RIGHTPAREN);
 			Stmt thenS = parseStmt();
 
 			if(currentToken.kind==Token.ELSE) {
 				acceptIt();
 				Stmt elseS = parseStmt();
-				//S = new IfStmt(E, thenS, elseS, previousTokenPosition);
-				S = new IfStmt(parseExpr(), thenS, elseS, previousTokenPosition);
+				S = new IfStmt(E, thenS, elseS, previousTokenPosition);
 			} else {
-				//S = new IfStmt(E, thenS, previousTokenPosition);
-				S = new IfStmt(parseExpr(), thenS, previousTokenPosition);
+				S = new IfStmt(E, thenS, previousTokenPosition);
 			}
 		} else if(currentToken.kind==Token.WHILE) {
 			acceptIt();
@@ -799,7 +797,7 @@ public class Parser {
 		} else {
 			S = new EmptyStmt(previousTokenPosition);
 		}
-	return S;
+		return S;
     }
 
     public CompoundStmt parseCompoundStmt() throws SyntaxError {
@@ -830,8 +828,8 @@ public class Parser {
 		if (currentToken.kind == Token.RIGHTPAREN) {
 		    return new  EmptyActualParam (previousTokenPosition);
 		}
-		Expr Params = null;
-		Params = new ActualParam (parseExpr(), previousTokenPosition);
+		//Expr Params = null;
+		Expr Params = new ActualParam (parseExpr(), previousTokenPosition);
 		if (currentToken.kind == Token.COMMA) {
 			acceptIt();
 		}
